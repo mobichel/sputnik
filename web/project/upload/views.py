@@ -87,17 +87,20 @@ def add_template():
 
         with open(template_src_file) as fh:
             tmp = json.load(fh)
-            if bool(tmp['definition']):
+            if 'definition' in tmp:
                 definition = tmp['definition']
-            elif bool(tmp['template'][0]['definition']):
+                name = definition['guid']
+            elif 'template' in tmp:
                 definition = tmp['template'][0]['definition']
+                name = definition['guid']
             else:
                 print 'Template definition not accurate'
+                name = None
 
         metadata = {'image_src':image_src, 'contributor':current_user.email,
                     'template_src':template_src, 'ss_option_src':ss_option_src}
 
-        template =Templates(definition=definition, rating=form.template_rating.data, metadata=metadata)
+        template = Templates(name=name, definition=definition, rating=form.template_rating.data, metadata=metadata)
 
         template.save()
 
