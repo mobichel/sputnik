@@ -3,8 +3,6 @@ import datetime
 from flask_mongoengine import MongoEngine, ValidationError
 from flask_security import UserMixin, RoleMixin
 from werkzeug.security import check_password_hash
-from mongoengine.fields import ListField, EmbeddedDocumentField, GenericEmbeddedDocumentField, ReferenceField, GenericReferenceField, SortedListField
-
 
 from . import settings
 
@@ -12,7 +10,6 @@ from . import settings
 # Create database connection object and instantiation of mongodb
 db = MongoEngine()
 db.connect('project1', host=settings.MONGO_DATABASE_URI)
-
 
 class Role(db.Document, RoleMixin):
     name = db.StringField(max_length=80, unique=True)
@@ -48,6 +45,7 @@ class Dashboards (db.Document, object):
     rating = db.IntField()
     image_src = db.StringField(max_length=255, required=True)
     tags = db.ListField(required=True)
+    product = db.StringField(default='Pulse')
     overview = db.DictField()
     features = db.DictField()
     prerequisites = db.DictField()
@@ -55,6 +53,9 @@ class Dashboards (db.Document, object):
     ss_options_file = db.StringField()
     pub_date = db.DateTimeField(default=datetime.datetime.now)
     templates = db.ListField()
+    author = db.StringField()
+    status = db.StringField()
+    contributor = db.StringField(max_length=125)
     meta = {'strict': False}
 
     def clean(self):
@@ -84,6 +85,7 @@ class Visualizations (db.Document, object):
     image_edit = db.StringField(required=True)
     plugin_src = db.StringField(required=True)
     pub_date = db.DateTimeField(default=datetime.datetime.now)
+    author = db.StringField()
     status = db.StringField()
     contributor = db.StringField(max_length=125, required=True)
     meta = {'strict': False}
@@ -112,7 +114,7 @@ class Templates (db.Document, object):
     metadata = db.DictField(required=True)
     rating = db.IntField()
     pub_date = db.DateTimeField(default=datetime.datetime.now)
-    contributor = db.StringField(max_length=125)
+    status = db.StringField()
     meta = {'strict': False}
 
     def clean(self):

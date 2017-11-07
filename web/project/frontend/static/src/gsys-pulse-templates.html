@@ -14,7 +14,6 @@
 <link rel="import" href="gsys-detail-template.html">
 <link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
 
-
   <dom-module id="gsys-pulse-templates">
 
   <template>
@@ -55,6 +54,11 @@
             }
         }
 
+        .add {
+            color:var(--genesys-red);;
+            margin:15px 15px 0px 0px;
+        }
+
 
       </style>
 
@@ -79,7 +83,10 @@
       <template is="dom-if" if="[[!_getTemplateID(route)]]" hidden$="[[failure]]">
           <paper-toolbar class="subheader">
             <span class="title"></span>
+
+            <paper-icon-button class="add" icon="icons:add-circle" on-tap="_addTemplate"></paper-icon-button>
             <paper-input label="search for template" value="{{filterString}}"></paper-input>
+
           </paper-toolbar>
 
           <div class="vertical-section">
@@ -96,14 +103,14 @@
           <ul class="app-grid">
             <template is="dom-repeat" items="[[_getListItems(filteredItems)]]">
                <li class="item">
-                  <pulse-template-elt item="[[item]]"></pulse-template-elt>
+                  <pulse-template-elt item="[[item]]" user="[[user]]" role="[[role]]"></pulse-template-elt>
                 </li>
             </template>
           </ul>
 
 
           <template is="dom-if" if="[[_getTemplateID(route)]]" hidden$="[[failure]]">
-              <gsys-detail-template route="[[route]]"></gsys-detail-template>
+              <gsys-detail-template route="[[route]]" user="[[user]]" role="[[role]]"></gsys-detail-template>
           </template>
 
 
@@ -187,6 +194,10 @@
 
       _showPage404: function() {
           this.page = 'view404';
+      },
+
+      _addTemplate: function (evt) {
+        location.href= '/upload/templates';
       }
 
       });

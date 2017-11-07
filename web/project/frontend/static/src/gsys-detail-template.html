@@ -12,6 +12,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/s-html/s-html.html">
 <link rel="import" href="../bower_components/app-layout/app-grid/app-grid-style.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../bower_components/codelab-components/syntax-style.html">
 <link rel="import" href="../bower_components/iron-icons/communication-icons.html">
@@ -46,6 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               --app-grid-expandible-item-columns:2;
               --app-grid-gutter:0px;
               --app-grid-item-height:auto;
+              --s-html-anchor-color: var(--genesys-purple);
             }
 
             .item.desc {
@@ -82,6 +84,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             }
 
+            a.ext-link {
+                color:var(--genesys-purple) !important;
+            }
+
+            .second {
+                margin-top: 10px;
+            }
+
+
 
         </style>
         <!--
@@ -97,7 +108,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <google-codelab-step label="Dataset" duration="2">
                 <h2>[[item.definition.name]]</h2>
                 <section>
-                    <p>[[item.definition.description]]</p>
+                    <s-html html="<p>[[_urlify(item.definition.description)]]</p>"></s-html>
                     <s-html html="[[item.shtml]]"></s-html>
                     <a href="/[[item.metadata.image_src]]" title="[[item.definition.name]]" target="_blank">
                         <img src="/[[item.metadata.image_src]]" style="padding-left:20px;max-width: 624px"></img>
@@ -122,6 +133,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                         </paper-chip>
                     </template>
                 </div>
+
+                <template is="dom-if" if="{{_isGroupBy(item)}}">
+                <h3>Group By Business Attributes</h3>
+                <p>See below the list of available business attributes with the template.</p>
+                    <template is="dom-repeat" items="[[_getGroupByDefinition(item)]]">
+                        <paper-chip single-line="">
+                            <div slot="label">[[item.label]]</div>
+                        </paper-chip>
+                    </template>
+                </template>
+
 
                 <h3>Statistics overview</h3>
                 <p>See below the description of statistics grouped by business objective groups available with the template.</p>
@@ -186,27 +208,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     </template>
                 </ul>
 
+                <p>
+                <b>Instructions to import Pulse template are available in the Help Center:</b>
+                        <br>
+                        <a class="ext-link" href="/pulse/help#2" target="_blank">How to import template into my Pulse environment</a>
+                </p>
+
                 <p>In order to run this template, you need to configure all statistic types properly
                 in your Stat Server applications used by Pulse.</p>
-
-                <!--<paper-button class="dashboard-reserve" on-tap="_onDownloadOptions" data-args="[[item]]">
-                    Download options
-                </paper-button>-->
 
 
                 <aside class="special">
                         <p>The template is relying on specific statistic types. Those statistics type can be downloaded and should be imported into your Genesys environment in the Stat Server options.<br></p>
                         <p>
-                            <paper-button raised class="colored" on-tap="_onDownloadOptions" data-args="[[item]]">
-                                <iron-icon icon="file-download"></iron-icon>
-                                    <b>Download Stat Server Options</b>
+                            <paper-button class="colored" on-tap="_onDownloadOptions" data-args="[[item]]">
+                               <iron-icon icon="file-download"></iron-icon>
+                                    <b>Stat Server Options</b>
                             </paper-button>
+
+                            <paper-button class="colored second" on-tap="_onDownloadDefinition" data-args="[[item]]">
+                               <iron-icon icon="file-download"></iron-icon>
+                                    <b>Pulse Template</b>
+                            </paper-button>
+
                         </p>
                 </aside>
 
                 <h3>Who developed this template?</h3>
-                <s-html html="[[item.metadata.contributor]]"></s-html>
-                <s-html html="[[item.metadata.author]]"></s-html>
+                <s-html html="<p>[[_urlify(item.metadata.author)]]</p>"></s-html><br>
+                <p align='right'>published by: <a class='ext-link' target='_blank' href='mailto:[[item.metadata.contributor]]'>[[item.metadata.contributor]]</a></p>
 
             </google-codelab-step>
 
@@ -310,6 +340,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             return id;
         },
 
+        _isGroupBy: function(item) {
+            var arrayGroup = this._getGroupByDefinition(item);
+            if (Array.isArray(arrayGroup))
+                return arrayGroup.length > 0;
+            else
+                return false;
+        },
+
         _getTemplateName: function(item) {
             console.log(item);
         },
@@ -318,6 +356,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           if (item) {
             var filteredArray = item.definition.column.filter(function(item) {
                 return item.category == 'ccMEASURE'
+            });
+            return filteredArray;
+          }
+        },
+
+        _getGroupByDefinition: function(item) {
+          if (item) {
+            var filteredArray = item.definition.column.filter(function(item) {
+                return item.category == 'ccDIMENSION' && item.label
             });
             return filteredArray;
           }
@@ -350,9 +397,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         _onDownloadOptions: function(evt) {
           //Retrieve dashboard details
-          var args = evt.target.dataArgs;
+          var args = evt.currentTarget.dataArgs;
           window.open('/'+ args.metadata.ss_option_src);
+        },
+
+
+        _onDownloadDefinition: function(evt) {
+          //Retrieve dashboard details
+          var args = evt.currentTarget.dataArgs;
+          window.open('/'+ args.metadata.template_src);
+        },
+
+        _urlify: function(text) {
+            if (!text) {
+                return '';
+            }
+            var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
+            //var urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, function(url,b,c) {
+                var url2 = (c == 'www.') ?  'http://' +url : url;
+                return '<a class="ext-link" href="' +url2+ '" target="_blank">' + url + '</a>';
+            })
         }
+
 
     });
     </script>
